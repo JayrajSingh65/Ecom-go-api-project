@@ -2,6 +2,8 @@ package products
 
 import (
 	"net/http"
+
+	"github.com/jayraj/myapp/internal/json"
 )
 
 type handler struct {
@@ -22,5 +24,5 @@ func (h *handler) ListProducts(w http.ResponseWriter, r *http.Request) {
 	products := struct {
 		Products []string `json:"products"`
 	}{}
-
+	json.Write(w, http.StatusOK, products)
 }
