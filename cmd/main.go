@@ -1,15 +1,30 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"os"
+
+	"github.com/jackc/pgx/v5"
+
+	"github.com/jayraj/myapp/internal/env"
 )
 
 func main() {
+	ctx := context.Background()
 	cfg := config{
 		addr: ":8080",
-		db:   dbconfig{},
+		db: dbconfig{
+			dns: env.GetString("GOOSE_DBSTRING", "host=localhost user=postgres password=postgres dbname=ecomdb sslmode=disabled"),
+		},
 	}
+
+	//Database
+	conn, err := pgx.Connect(ctx, cfg.db.dns)
+	if err != nil {
+		os.Exit(1)
+	}
+	defer conn.Close(ctx)
 
 	api := application{
 		config: cfg,
