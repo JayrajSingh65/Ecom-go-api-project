@@ -7,7 +7,71 @@ package repo
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const createOrder = `-- name: CreateOrder :one
+INSERT 
+
+INTO 
+orders 
+  (user_id, total_amount, status)
+VALUES 
+  ($1, $2, 'pending')
+RETURNING id, user_id, total_amount, status, created_at, updated_at
+`
+
+type CreateOrderParams struct {
+	UserID      int64          `json:"user_id"`
+	TotalAmount pgtype.Numeric `json:"total_amount"`
+}
+
+func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order, error) {
+	row := q.db.QueryRow(ctx, createOrder, arg.UserID, arg.TotalAmount)
+	var i Order
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.TotalAmount,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createOrderItem = `-- name: CreateOrderItem :one
+INSERT INTO order_items (order_id, product_id, quantity, price)
+VALUES ($1, $2, $3, $4) RETURNING id, order_id, product_id, quantity, price, created_at, updated_at
+`
+
+type CreateOrderItemParams struct {
+	OrderID   int64          `json:"order_id"`
+	ProductID int64          `json:"product_id"`
+	Quantity  int32          `json:"quantity"`
+	Price     pgtype.Numeric `json:"price"`
+}
+
+func (q *Queries) CreateOrderItem(ctx context.Context, arg CreateOrderItemParams) (OrderItem, error) {
+	row := q.db.QueryRow(ctx, createOrderItem,
+		arg.OrderID,
+		arg.ProductID,
+		arg.Quantity,
+		arg.Price,
+	)
+	var i OrderItem
+	err := row.Scan(
+		&i.ID,
+		&i.OrderID,
+		&i.ProductID,
+		&i.Quantity,
+		&i.Price,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
 
 const findProductByID = `-- name: FindProductByID :one
 

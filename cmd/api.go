@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5"
 	repo "github.com/jayraj/myapp/internal/adapters/postgresql/sqlc"
+	"github.com/jayraj/myapp/internal/orders"
 	"github.com/jayraj/myapp/internal/products"
 )
 
@@ -34,9 +35,12 @@ func (app *application) mount() http.Handler {
 
 	productService := products.NewService(repo.New(app.db))
 	productHandler := products.NewHandler(productService)
-
+	orderService := orders.NewService(repo.New(app.db), app.db)
+	orderHandler := orders.NewHandler(orderService)
 	r.Get("/products", productHandler.ListProducts)
 	r.Get(`/products/{id}`, productHandler.ProductByID)
+
+	r.Post("/orders", orderHandler.PlaceOrder)
 
 	return r
 

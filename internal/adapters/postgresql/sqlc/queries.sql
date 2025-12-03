@@ -13,3 +13,17 @@ FROM
   products 
 WHERE 
    id = $1;
+
+-- name: CreateOrder :one
+INSERT 
+
+INTO 
+orders 
+  (user_id,  status)
+VALUES 
+  ($1, 'pending')
+RETURNING *;
+
+-- name: CreateOrderItem :one
+INSERT INTO order_items (order_id, product_id, quantity, price)
+VALUES ($1, $2, $3, $4) RETURNING *;
